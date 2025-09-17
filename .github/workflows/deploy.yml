@@ -46,6 +46,15 @@ jobs:
       - name: Run E2E tests
         run: npm run test:e2e
 
+      - name: Build for accessibility testing
+        run: npm run build
+
+      - name: Start preview server for accessibility testing
+        run: |
+          npm run preview &
+          sleep 10
+          curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:4173 || exit 1
+
       - name: Accessibility testing with axe-core
         run: npx @axe-core/cli http://localhost:4173 --exit
 
