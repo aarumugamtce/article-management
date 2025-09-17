@@ -130,9 +130,12 @@ await articleAPI.deleteArticle(id);
 ### **Backend Integration**
 
 ```typescript
-// Easy switch between mock and real API
-const USE_MOCK_API = false; // Set to false for production
-const BACKEND_URL = 'https://your-api.com';
+// Environment-driven API configuration
+// Set via environment variables or .env file
+const API_CONFIG = {
+	USE_MOCK_API: ENV.USE_MOCK_API ?? true,
+	BACKEND_URL: ENV.API_BASE_URL || 'https://api.example.com'
+};
 
 // Real API with authentication
 class ExternalArticleAPI {
@@ -142,6 +145,16 @@ class ExternalArticleAPI {
 		});
 	}
 }
+```
+
+### **Environment Configuration**
+
+```bash
+# .env file or CI/CD environment variables
+USE_MOCK_API=false
+API_BASE_URL=https://your-production-api.com
+ENABLE_ANALYTICS=true
+LOG_LEVEL=info
 ```
 
 ### **Component Architecture**

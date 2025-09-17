@@ -1,7 +1,9 @@
+import { ENV } from '$lib/config/env';
+
 // API Configuration
 export const API_CONFIG = {
-	USE_MOCK_API: true,
-	BACKEND_URL: 'https://api.example.com',
+	USE_MOCK_API: ENV.USE_MOCK_API ?? true,
+	BACKEND_URL: ENV.API_BASE_URL || 'https://api.example.com',
 	ENDPOINTS: {
 		ARTICLES: '/api/articles'
 	}
