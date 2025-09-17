@@ -5,13 +5,13 @@ export type Theme = 'light' | 'dark';
 const themeStore = writable<Theme>('light');
 
 export function getTheme() {
-  let value: Theme = 'light';
-  themeStore.subscribe(v => value = v)();
-  return value;
+	let value: Theme = 'light';
+	themeStore.subscribe((v) => (value = v))();
+	return value;
 }
 
 export function setTheme(newTheme: Theme) {
-  themeStore.set(newTheme);
+	themeStore.set(newTheme);
 }
 
 export { themeStore };

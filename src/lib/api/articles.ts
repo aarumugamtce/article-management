@@ -1,137 +1,143 @@
 import type { Article } from '$lib/types';
 import { API_CONFIG, MESSAGES, STORAGE_KEYS } from '$lib/constants';
+import { articles } from '$lib/stores/articles';
 
 export interface ArticleFilters {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: string;
+	page?: number;
+	limit?: number;
+	search?: string;
+	status?: string;
 }
 
 export interface ArticleResponse {
-  articles: Article[];
-  total: number;
-  page: number;
-  limit: number;
+	articles: Article[];
+	total: number;
+	page: number;
+	limit: number;
 }
 
 class ArticleAPI {
-  private baseUrl = API_CONFIG.ENDPOINTS.ARTICLES;
+	async getArticles(filters: ArticleFilters = {}): Promise<ArticleResponse> {
+		// Use client-side data for static build
+		const allArticles = articles.get();
+		let filteredArticles = allArticles;
 
-  async getArticles(filters: ArticleFilters = {}): Promise<ArticleResponse> {
-    const params = new URLSearchParams();
-    
-    if (filters.page) params.set('page', filters.page.toString());
-    if (filters.limit) params.set('limit', filters.limit.toString());
-    if (filters.search) params.set('search', filters.search);
-    if (filters.status) params.set('status', filters.status);
+		// Apply search filter
+		if (filters.search) {
+			filteredArticles = filteredArticles.filter((article) =>
+				article.title.toLowerCase().includes(filters.search!.toLowerCase())
+			);
+		}
 
-    const response = await fetch(`${this.baseUrl}?${params}`);
-    if (!response.ok) throw new Error('Failed to fetch articles');
-    
-    return response.json();
-  }
+		// Apply status filter
+		if (filters.status && filters.status !== 'All') {
+			filteredArticles = filteredArticles.filter((article) => article.status === filters.status);
+		}
 
-  async createArticle(article: Omit<Article, 'id' | 'createdAt'>): Promise<Article> {
-    const response = await fetch(this.baseUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(article)
-    });
-    
-    if (!response.ok) throw new Error('Failed to create article');
-    return response.json();
-  }
+		const page = filters.page || 1;
+		const limit = filters.limit || 10;
+		const startIndex = (page - 1) * limit;
+		const endIndex = startIndex + limit;
 
-  async updateArticle(id: number, article: Omit<Article, 'id' | 'createdAt'>): Promise<Article> {
-    const response = await fetch(`${this.baseUrl}?id=${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(article)
-    });
-    
-    if (!response.ok) throw new Error('Failed to update article');
-    return response.json();
-  }
+		return {
+			articles: filteredArticles.slice(startIndex, endIndex),
+			total: filteredArticles.length,
+			page,
+			limit
+		};
+	}
 
-  async deleteArticle(id: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}?id=${id}`, {
-      method: 'DELETE'
-    });
-    
-    if (!response.ok) throw new Error('Failed to delete article');
-  }
+	async createArticle(article: Omit<Article, 'id' | 'createdAt'>): Promise<Article> {
+		const { addArticle } = await import('$lib/stores/articles');
+		addArticle(article);
+
+		// Return the created article
+		const allArticles = articles.get();
+		return allArticles[allArticles.length - 1];
+	}
+
+	async updateArticle(id: number, article: Omit<Article, 'id' | 'createdAt'>): Promise<Article> {
+		const { updateArticle } = await import('$lib/stores/articles');
+		const existingArticle = articles.get().find((a) => a.id === id);
+		if (!existingArticle) throw new Error('Article not found');
+
+		const updatedArticle = { ...existingArticle, ...article };
+		updateArticle(updatedArticle);
+		return updatedArticle;
+	}
+
+	async deleteArticle(id: number): Promise<void> {
+		const { deleteArticle } = await import('$lib/stores/articles');
+		deleteArticle(id);
+	}
 }
 
 // For real backend API
 class ExternalArticleAPI {
-  constructor(private baseUrl: string) {}
+	constructor(private baseUrl: string) {}
 
-  async getArticles(filters: ArticleFilters = {}): Promise<ArticleResponse> {
-    const params = new URLSearchParams();
-    
-    if (filters.page) params.set('page', filters.page.toString());
-    if (filters.limit) params.set('limit', filters.limit.toString());
-    if (filters.search) params.set('search', filters.search);
-    if (filters.status) params.set('status', filters.status);
+	async getArticles(filters: ArticleFilters = {}): Promise<ArticleResponse> {
+		const params = new URLSearchParams();
 
-    const response = await fetch(`${this.baseUrl}/articles?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${this.getAuthToken()}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) throw new Error('Failed to fetch articles');
-    return response.json();
-  }
+		if (filters.page) params.set('page', filters.page.toString());
+		if (filters.limit) params.set('limit', filters.limit.toString());
+		if (filters.search) params.set('search', filters.search);
+		if (filters.status) params.set('status', filters.status);
 
-  async createArticle(article: Omit<Article, 'id' | 'createdAt'>): Promise<Article> {
-    const response = await fetch(`${this.baseUrl}/articles`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.getAuthToken()}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(article)
-    });
-    
-    if (!response.ok) throw new Error('Failed to create article');
-    return response.json();
-  }
+		const response = await fetch(`${this.baseUrl}/articles?${params}`, {
+			headers: {
+				Authorization: `Bearer ${this.getAuthToken()}`,
+				'Content-Type': 'application/json'
+			}
+		});
 
-  async updateArticle(id: number, article: Omit<Article, 'id' | 'createdAt'>): Promise<Article> {
-    const response = await fetch(`${this.baseUrl}/articles/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${this.getAuthToken()}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(article)
-    });
-    
-    if (!response.ok) throw new Error('Failed to update article');
-    return response.json();
-  }
+		if (!response.ok) throw new Error(MESSAGES.ERRORS.FETCH_FAILED);
+		return response.json();
+	}
 
-  async deleteArticle(id: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/articles/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${this.getAuthToken()}` }
-    });
-    
-    if (!response.ok) throw new Error('Failed to delete article');
-  }
+	async createArticle(article: Omit<Article, 'id' | 'createdAt'>): Promise<Article> {
+		const response = await fetch(`${this.baseUrl}/articles`, {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${this.getAuthToken()}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(article)
+		});
 
-  private getAuthToken(): string {
-    return localStorage.getItem('authToken') || '';
-  }
+		if (!response.ok) throw new Error(MESSAGES.ERRORS.CREATE_FAILED);
+		return response.json();
+	}
+
+	async updateArticle(id: number, article: Omit<Article, 'id' | 'createdAt'>): Promise<Article> {
+		const response = await fetch(`${this.baseUrl}/articles/${id}`, {
+			method: 'PUT',
+			headers: {
+				Authorization: `Bearer ${this.getAuthToken()}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(article)
+		});
+
+		if (!response.ok) throw new Error(MESSAGES.ERRORS.UPDATE_FAILED);
+		return response.json();
+	}
+
+	async deleteArticle(id: number): Promise<void> {
+		const response = await fetch(`${this.baseUrl}/articles/${id}`, {
+			method: 'DELETE',
+			headers: { Authorization: `Bearer ${this.getAuthToken()}` }
+		});
+
+		if (!response.ok) throw new Error(MESSAGES.ERRORS.DELETE_FAILED);
+	}
+
+	private getAuthToken(): string {
+		return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN) || '';
+	}
 }
 
 // Configuration - switch between mock and real API
-const USE_MOCK_API = true; // Set to false for real backend
-const BACKEND_URL = 'https://api.example.com';
-
-export const articleAPI = USE_MOCK_API 
-  ? new ArticleAPI() 
-  : new ExternalArticleAPI(BACKEND_URL);
+export const articleAPI = API_CONFIG.USE_MOCK_API
+	? new ArticleAPI()
+	: new ExternalArticleAPI(API_CONFIG.BACKEND_URL);

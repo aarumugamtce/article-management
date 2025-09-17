@@ -1,50 +1,57 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import Button from './Button.svelte';
+	import type { Snippet } from 'svelte';
+	import Button from './Button.svelte';
 
-  let { isOpen, onClose, children }: {
-    isOpen: boolean;
-    onClose: () => void;
-    children?: any;
-  } = $props();
-  
-  let modalRef = $state<HTMLElement>();
+	let {
+		isOpen,
+		onClose,
+		children
+	}: {
+		isOpen: boolean;
+		onClose: () => void;
+		children?: Snippet;
+	} = $props();
 
-  $effect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      modalRef?.focus();
-    }
-    return () => { document.body.style.overflow = ''; };
-  });
+	let modalRef = $state<HTMLElement>();
 
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      onClose();
-    }
-  }
+	$effect(() => {
+		if (isOpen) {
+			document.body.style.overflow = 'hidden';
+			modalRef?.focus();
+		}
+		return () => {
+			document.body.style.overflow = '';
+		};
+	});
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			onClose();
+		}
+	}
 </script>
 
 {#if isOpen}
-  <div 
-    class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50" 
-    role="dialog" 
-    aria-modal="true" 
-    tabindex="-1"
-    onclick={onClose}
-    onkeydown={handleKeydown}
-  >
-    <section 
-      bind:this={modalRef} 
-      tabindex="-1" 
-      role="document"
-      class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl" 
-      onclick={(e) => e.stopPropagation()}
-    >
-      <div class="flex justify-end mb-4">
-        <Button onclick={onClose} title="Close modal">×</Button>
-      </div>
-      {@render children?.()}
-    </section>
-  </div>
+	<div
+		class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-gray-900 p-4"
+		role="dialog"
+		aria-modal="true"
+		tabindex="-1"
+		onclick={(e) => {
+			if (e.target === e.currentTarget) onClose();
+		}}
+		onkeydown={handleKeydown}
+	>
+		<div
+			bind:this={modalRef}
+			tabindex="-1"
+			role="document"
+			class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 text-gray-900 shadow-xl dark:bg-gray-800 dark:text-gray-100"
+		>
+			<div class="mb-4 flex justify-end">
+				<Button onclick={onClose} title="Close modal">×</Button>
+			</div>
+			{@render children?.()}
+		</div>
+	</div>
 {/if}

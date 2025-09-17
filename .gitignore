@@ -16,3 +16,6 @@ coverage/
 # Test results
 test-results/
 playwright-report/
+
+# Lighthouse CI reports
+.lighthouseci/

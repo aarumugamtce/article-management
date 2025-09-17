@@ -30,7 +30,7 @@ describe('debounce utility', () => {
 		debouncedFn('third');
 
 		vi.advanceTimersByTime(300);
-		
+
 		expect(mockFn).toHaveBeenCalledTimes(1);
 		expect(mockFn).toHaveBeenCalledWith('third');
 	});

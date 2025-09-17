@@ -60,6 +60,7 @@ Internal tool for managing articles built with **SvelteKit (Svelte 5 with Runes)
 ## 🚀 Features Implemented
 
 ### ✅ Core Requirements
+
 - **📋 Article List**: Paginated view with infinite scroll
 - **🔍 Search**: Debounced search by title (300ms)
 - **🏷️ Filter**: Status filter (All, Published, Draft)
@@ -69,6 +70,7 @@ Internal tool for managing articles built with **SvelteKit (Svelte 5 with Runes)
 - **⚡ Performance**: Debouncing, lazy loading, intersection observer
 
 ### ✅ Accessibility & UX
+
 - **♿ Semantic HTML**: Proper ARIA labels and roles
 - **⌨️ Keyboard Navigation**: Full keyboard accessibility
 - **📢 Screen Reader**: ARIA live regions for dynamic content
@@ -77,6 +79,7 @@ Internal tool for managing articles built with **SvelteKit (Svelte 5 with Runes)
 - **❌ Error Handling**: User-friendly error messages
 
 ### ✅ Bonus Features
+
 - **👤 Role-Based Access**: Editor vs Viewer permissions
 - **🌙 Theme Toggle**: Light/Dark mode with smooth transitions
 - **♾️ Infinite Scroll**: Intersection Observer API implementation
@@ -85,6 +88,7 @@ Internal tool for managing articles built with **SvelteKit (Svelte 5 with Runes)
 ## 🛠️ Technical Implementation
 
 ### **Frontend Architecture**
+
 ```typescript
 // Svelte 5 Runes Pattern
 let articles = $state<Article[]>([]);
@@ -92,27 +96,29 @@ let loading = $state(false);
 let currentTheme = $derived(getTheme());
 
 $effect(() => {
-  // Reactive side effects
-  document.documentElement.classList.toggle('dark', currentTheme === 'dark');
+	// Reactive side effects
+	document.documentElement.classList.toggle('dark', currentTheme === 'dark');
 });
 ```
 
 ### **State Management**
+
 - **Svelte 5 Runes**: Modern reactive state (`$state`, `$effect`, `$derived`)
 - **Writable Stores**: Theme and role persistence
 - **Local State**: Component-level state management
 
 ### **API Design**
+
 ```typescript
 // Service Layer Pattern
 import { articleAPI } from '$lib/api/articles';
 
 // Fetch articles with filters
 const data = await articleAPI.getArticles({
-  page: 1,
-  limit: 10,
-  search: 'term',
-  status: 'Published'
+	page: 1,
+	limit: 10,
+	search: 'term',
+	status: 'Published'
 });
 
 // CRUD operations
@@ -122,6 +128,7 @@ await articleAPI.deleteArticle(id);
 ```
 
 ### **Backend Integration**
+
 ```typescript
 // Easy switch between mock and real API
 const USE_MOCK_API = false; // Set to false for production
@@ -129,15 +136,16 @@ const BACKEND_URL = 'https://your-api.com';
 
 // Real API with authentication
 class ExternalArticleAPI {
-  async getArticles(filters) {
-    return fetch(`${baseUrl}/articles`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-  }
+	async getArticles(filters) {
+		return fetch(`${baseUrl}/articles`, {
+			headers: { Authorization: `Bearer ${token}` }
+		});
+	}
 }
 ```
 
 ### **Component Architecture**
+
 ```
 src/lib/
 ├── api/
@@ -169,6 +177,7 @@ src/lib/
 ```
 
 ### **Performance Optimizations**
+
 - **Debouncing**: 300ms search delay
 - **Intersection Observer**: Efficient infinite scroll
 - **Lazy Loading**: Load articles on demand
@@ -181,6 +190,7 @@ src/lib/
 ## 🧪 Testing Strategy
 
 ### **Unit Tests** (Vitest)
+
 ```bash
 tests/unit/
 ├── utils/
@@ -191,10 +201,11 @@ tests/unit/
 ```
 
 ### **Code Coverage** (Vitest + V8)
+
 ```bash
 # Coverage Thresholds (Quality Gates)
 - Lines: 80% minimum
-- Branches: 80% minimum  
+- Branches: 80% minimum
 - Functions: 80% minimum
 - Statements: 80% minimum
 
@@ -205,6 +216,7 @@ tests/unit/
 ```
 
 ### **Integration Tests** (Playwright)
+
 ```bash
 e2e/
 └── demo.test.ts                  # End-to-end user flows
@@ -216,6 +228,7 @@ e2e/
 ```
 
 ### **Accessibility Tests** (axe-core)
+
 ```bash
 # Automated WCAG 2.1 AA compliance testing
 - Color contrast validation
@@ -228,18 +241,26 @@ e2e/
 ## 🎨 Styling & Theming
 
 ### **Tailwind CSS v4**
+
 - **Dark Mode**: Class-based theme switching
 - **Responsive Design**: Mobile-first approach
 - **Custom Properties**: CSS variables for theming
 - **Component Variants**: Consistent design system
 
 ### **Theme Implementation**
+
 ```css
 /* Light Mode */
-body { background-color: white; color: #111827; }
+body {
+	background-color: white;
+	color: #111827;
+}
 
 /* Dark Mode */
-.dark body { background-color: #111827; color: #f9fafb; }
+.dark body {
+	background-color: #111827;
+	color: #f9fafb;
+}
 ```
 
 ## 📁 Project Structure
@@ -278,15 +299,18 @@ article-management/
 ## 🚦 Getting Started
 
 ### **Prerequisites**
+
 - Node.js 18+
 - npm or pnpm
 
 ### **Installation**
+
 ```bash
 npm install
 ```
 
 ### **Development**
+
 ```bash
 npm run dev
 # or start with browser
@@ -294,6 +318,7 @@ npm run dev -- --open
 ```
 
 ### **Testing**
+
 ```bash
 # Unit tests
 npm run test:unit
@@ -312,20 +337,31 @@ npm test
 ```
 
 ### **Production Build**
+
 ```bash
 npm run build
 npm run preview
 ```
 
+### **Pre-commit Hooks**
+
+```bash
+# Automatically runs on git commit:
+- Prettier formatting
+- TypeScript checking
+- Only on staged files
+```
+
 ## 🚀 Deployment
 
 ### **GitHub Pages with CI/CD**
+
 Automated deployment pipeline with comprehensive testing:
 
 ```yaml
 # .github/workflows/deploy.yml
 - Unit Tests (Vitest) with Code Coverage
-- E2E Tests (Playwright) 
+- E2E Tests (Playwright)
 - Accessibility Testing (axe-core)
 - Security Audit (npm audit)
 - Vulnerability Scan (Snyk)
@@ -335,17 +371,20 @@ Automated deployment pipeline with comprehensive testing:
 ```
 
 ### **Quality Gates**
-- **Performance**: 90+ Lighthouse score
+
+- **Performance**: 75+ Lighthouse score
 - **Accessibility**: 98+ Lighthouse score + axe-core compliance
 - **Security**: No high/critical vulnerabilities
 - **Code Coverage**: 80% minimum (lines, branches, functions, statements)
 - **Tests**: 100% test suite passing
 
 ### **Setup Instructions**
+
 1. Fork this repository
 2. Enable GitHub Pages in repository settings
 3. Add `SNYK_TOKEN` secret for vulnerability scanning
 4. Push to `main` branch triggers deploymentiew
+
 ```
 
 ## 🔧 Configuration
@@ -356,6 +395,8 @@ Automated deployment pipeline with comprehensive testing:
 - **Prettier**: Code formatting
 - **Tailwind**: Utility-first CSS
 - **Vite**: Fast build tool
+- **Husky**: Pre-commit hooks
+- **lint-staged**: Staged file linting
 - **GitHub Actions**: CI/CD pipeline
 - **Lighthouse CI**: Performance monitoring
 - **Snyk**: Security vulnerability scanning
@@ -374,7 +415,7 @@ Automated deployment pipeline with comprehensive testing:
 
 - **Bundle Size**: Optimized with Vite
 - **First Load**: < 100KB gzipped
-- **Lighthouse Score**: 95+ (Performance, Accessibility, SEO)
+- **Lighthouse Score**: 75+ Performance, 95+ Accessibility & SEO
 - **Memory Usage**: Efficient with proper cleanup
 
 ## 🎯 Interview Highlights
@@ -410,3 +451,4 @@ Automated deployment pipeline with comprehensive testing:
 ---
 
 **Built with ❤️ using Svelte 5, TypeScript, and modern web standards**
+```

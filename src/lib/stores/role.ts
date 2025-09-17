@@ -5,13 +5,13 @@ export type Role = 'viewer' | 'editor';
 const roleStore = writable<Role>('editor');
 
 export function getRole() {
-  let value: Role = 'editor';
-  roleStore.subscribe(v => value = v)();
-  return value;
+	let value: Role = 'editor';
+	roleStore.subscribe((v) => (value = v))();
+	return value;
 }
 
 export function setRole(newRole: Role) {
-  roleStore.set(newRole);
+	roleStore.set(newRole);
 }
 
 export { roleStore };

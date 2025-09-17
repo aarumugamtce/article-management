@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { articles, addArticle, updateArticle, deleteArticle } from '../../../src/lib/stores/articles';
+import {
+	articles,
+	addArticle,
+	updateArticle,
+	deleteArticle
+} from '../../../src/lib/stores/articles';
 import type { Article } from '../../../src/lib/types';
 
 describe('Articles Store', () => {
@@ -7,14 +12,26 @@ describe('Articles Store', () => {
 		// Reset articles to initial state
 		articles.value.length = 0;
 		articles.value.push(
-			{ id: 1, title: 'Test Article 1', status: 'Published', author: 'Jane Doe', createdAt: '2024-05-01T12:00:00Z' },
-			{ id: 2, title: 'Test Article 2', status: 'Draft', author: 'John Smith', createdAt: '2024-06-01T12:00:00Z' }
+			{
+				id: 1,
+				title: 'Test Article 1',
+				status: 'Published',
+				author: 'Jane Doe',
+				createdAt: '2024-05-01T12:00:00Z'
+			},
+			{
+				id: 2,
+				title: 'Test Article 2',
+				status: 'Draft',
+				author: 'John Smith',
+				createdAt: '2024-06-01T12:00:00Z'
+			}
 		);
 	});
 
 	it('should add new article', () => {
 		const initialCount = articles.get().length;
-		
+
 		addArticle({
 			title: 'New Article',
 			status: 'Draft',
@@ -23,7 +40,7 @@ describe('Articles Store', () => {
 
 		const updatedArticles = articles.get();
 		expect(updatedArticles).toHaveLength(initialCount + 1);
-		
+
 		const newArticle = updatedArticles[updatedArticles.length - 1];
 		expect(newArticle.title).toBe('New Article');
 		expect(newArticle.status).toBe('Draft');
@@ -44,8 +61,8 @@ describe('Articles Store', () => {
 		updateArticle(updatedArticle);
 
 		const articles_list = articles.get();
-		const found = articles_list.find(a => a.id === 1);
-		
+		const found = articles_list.find((a) => a.id === 1);
+
 		expect(found).toBeDefined();
 		expect(found?.title).toBe('Updated Title');
 		expect(found?.author).toBe('Updated Author');
@@ -53,17 +70,17 @@ describe('Articles Store', () => {
 
 	it('should delete article', () => {
 		const initialCount = articles.get().length;
-		
+
 		deleteArticle(1);
 
 		const updatedArticles = articles.get();
 		expect(updatedArticles).toHaveLength(initialCount - 1);
-		expect(updatedArticles.find(a => a.id === 1)).toBeUndefined();
+		expect(updatedArticles.find((a) => a.id === 1)).toBeUndefined();
 	});
 
 	it('should handle update of non-existent article', () => {
 		const initialArticles = [...articles.get()];
-		
+
 		updateArticle({
 			id: 999,
 			title: 'Non-existent',
@@ -78,7 +95,7 @@ describe('Articles Store', () => {
 
 	it('should handle delete of non-existent article', () => {
 		const initialArticles = [...articles.get()];
-		
+
 		deleteArticle(999);
 
 		// Should remain unchanged
