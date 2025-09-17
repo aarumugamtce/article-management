@@ -2,14 +2,17 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Article Management', () => {
 	test('should display main page elements', async ({ page }) => {
+		// Set desktop viewport to ensure all toggles are visible
+		await page.setViewportSize({ width: 1024, height: 768 });
 		await page.goto('/');
 
 		// Check main heading
 		await expect(page.locator('h1')).toContainText('Article Manager');
 
-		// Check theme and role buttons exist
-		await expect(page.getByText(/light|dark/)).toBeVisible();
-		await expect(page.getByText(/editor|viewer/)).toBeVisible();
+		// Check toggle switches exist
+		await expect(page.getByTitle('Toggle theme')).toBeVisible();
+		await expect(page.getByTitle('Toggle role')).toBeVisible();
+		await expect(page.getByTitle('Toggle view mode')).toBeVisible();
 
 		// Check search and filter controls exist
 		await expect(page.getByLabel('Search by Title')).toBeVisible();
@@ -19,25 +22,39 @@ test.describe('Article Management', () => {
 	test('should toggle between light and dark themes', async ({ page }) => {
 		await page.goto('/');
 
-		// Get theme button and click it
-		const themeButton = page.getByText(/🌙|☀️/);
-		await expect(themeButton).toBeVisible();
-		await themeButton.click();
+		// Get theme toggle and click it
+		const themeToggle = page.getByTitle('Toggle theme');
+		await expect(themeToggle).toBeVisible();
+		await themeToggle.click();
 
-		// Verify button is still visible (theme changed)
-		await expect(themeButton).toBeVisible();
+		// Verify toggle is still visible (theme changed)
+		await expect(themeToggle).toBeVisible();
 	});
 
 	test('should toggle between editor and viewer roles', async ({ page }) => {
 		await page.goto('/');
 
-		// Get role button and click it
-		const roleButton = page.getByText(/👤/);
-		await expect(roleButton).toBeVisible();
-		await roleButton.click();
+		// Get role toggle and click it
+		const roleToggle = page.getByTitle('Toggle role');
+		await expect(roleToggle).toBeVisible();
+		await roleToggle.click();
 
-		// Verify button is still visible (role changed)
-		await expect(roleButton).toBeVisible();
+		// Verify toggle is still visible (role changed)
+		await expect(roleToggle).toBeVisible();
+	});
+
+	test('should toggle between list and grid views', async ({ page }) => {
+		// Set desktop viewport to ensure view toggle is visible
+		await page.setViewportSize({ width: 1024, height: 768 });
+		await page.goto('/');
+
+		// Get view toggle and click it
+		const viewToggle = page.getByTitle('Toggle view mode');
+		await expect(viewToggle).toBeVisible();
+		await viewToggle.click();
+
+		// Verify toggle is still visible (view changed)
+		await expect(viewToggle).toBeVisible();
 	});
 });
 
@@ -59,5 +76,26 @@ test.describe('Basic Functionality', () => {
 		const statusSelect = page.getByLabel('Filter by Status');
 		await expect(statusSelect).toBeVisible();
 		await statusSelect.selectOption('Published');
+	});
+
+	test('should have scroll functionality', async ({ page }) => {
+		await page.goto('/');
+
+		// Wait for page to load
+		await page.waitForLoadState('networkidle');
+
+		// Test basic scroll functionality by checking if we can scroll
+		const initialScrollY = await page.evaluate(() => window.scrollY);
+		expect(initialScrollY).toBe(0);
+
+		// Scroll down
+		await page.evaluate(() => window.scrollTo(0, 100));
+		const scrolledY = await page.evaluate(() => window.scrollY);
+		expect(scrolledY).toBeGreaterThan(0);
+
+		// Scroll back to top
+		await page.evaluate(() => window.scrollTo(0, 0));
+		const backToTopY = await page.evaluate(() => window.scrollY);
+		expect(backToTopY).toBe(0);
 	});
 });

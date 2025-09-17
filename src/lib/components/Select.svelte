@@ -21,7 +21,7 @@
 		bind:value
 		onchange={(e) => onChange?.(e.currentTarget.value)}
 		aria-invalid={!!error}
-		class="w-full rounded-md border border-gray-300 bg-white p-2 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+		class="focus:ring-opacity-50 relative z-10 w-full rounded-md border-2 border-gray-400 bg-white p-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-100"
 	>
 		{#each options as opt}
 			<option value={opt === 'All' ? '' : opt}>{opt}</option>

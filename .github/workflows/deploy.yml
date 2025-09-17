@@ -52,11 +52,11 @@ jobs:
       - name: Start preview server for accessibility testing
         run: |
           npm run preview &
-          sleep 10
-          curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:4173 || exit 1
+          sleep 15
+          curl --retry 10 --retry-delay 3 --retry-connrefused http://localhost:4173/article-management/ || exit 1
 
       - name: Accessibility testing with axe-core
-        run: npx @axe-core/cli http://localhost:4173 --exit
+        run: npx @axe-core/cli http://localhost:4173/article-management/ --exit
 
       - name: Security audit
         run: npm audit --audit-level=high
@@ -89,8 +89,8 @@ jobs:
       - name: Serve application
         run: |
           npm run preview &
-          sleep 10
-          curl --retry 10 --retry-delay 2 --retry-connrefused http://localhost:4173 || exit 1
+          sleep 15
+          curl --retry 10 --retry-delay 3 --retry-connrefused http://localhost:4173/article-management/ || exit 1
 
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v10
@@ -125,6 +125,11 @@ jobs:
           USE_MOCK_API: ${{ vars.USE_MOCK_API || 'true' }}
           API_BASE_URL: ${{ vars.API_BASE_URL || 'https://api.example.com' }}
           ENABLE_ANALYTICS: ${{ vars.ENABLE_ANALYTICS || 'false' }}
+
+      - name: Verify build output
+        run: |
+          ls -la build/
+          test -f build/index.html || (echo "Missing index.html" && exit 1)
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

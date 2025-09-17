@@ -8,7 +8,7 @@ const config = {
 		adapter: adapter({
 			pages: 'build',
 			assets: 'build',
-			fallback: undefined,
+			fallback: 'index.html',
 			precompress: false,
 			strict: false
 		}),
@@ -16,7 +16,7 @@ const config = {
 			base: process.env.NODE_ENV === 'production' ? '/article-management' : ''
 		},
 		prerender: {
-			entries: ['/'],
+			entries: ['*'],
 			handleHttpError: 'warn'
 		}
 	}

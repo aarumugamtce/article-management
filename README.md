@@ -80,10 +80,14 @@ Internal tool for managing articles built with **SvelteKit (Svelte 5 with Runes)
 
 ### ✅ Bonus Features
 
-- **👤 Role-Based Access**: Editor vs Viewer permissions
-- **🌙 Theme Toggle**: Light/Dark mode with smooth transitions
+- **👤 Role-Based Access**: Editor vs Viewer permissions with toggle switch
+- **🌙 Theme Toggle**: Light/Dark mode with smooth toggle transitions
+- **📋 View Toggle**: List/Grid view modes with visual toggle
 - **♾️ Infinite Scroll**: Intersection Observer API implementation
 - **📊 Real-time Stats**: Article count and pagination info
+- **🔝 Scroll to Top**: Floating button for easy navigation
+- **💾 State Persistence**: All preferences saved across sessions
+- **🎛️ Sticky Header**: Controls always accessible while scrolling
 
 ## 🛠️ Technical Implementation
 
@@ -365,6 +369,28 @@ npm run preview
 - Only on staged files
 ```
 
+### **Enhanced UX Features**
+
+```bash
+# Modern Toggle Switches:
+- Theme: Light ☀️ ↔ Dark 🌙
+- Role: Viewer ↔ Editor
+- View: List 📋 ↔ Grid ⊞
+
+# State Persistence:
+- Search text preserved
+- Filter selections saved
+- View mode remembered
+- Role preference stored
+- Theme choice persisted
+
+# Navigation:
+- Sticky header with controls
+- Scroll to top button
+- Smooth animations
+- No flash on load
+```
+
 ## 🚀 Deployment
 
 ### **GitHub Pages with CI/CD**
@@ -396,13 +422,12 @@ Automated deployment pipeline with comprehensive testing:
 1. Fork this repository
 2. Enable GitHub Pages in repository settings
 3. Add `SNYK_TOKEN` secret for vulnerability scanning
-4. Push to `main` branch triggers deploymentiew
-
-```
+4. Push to `main` branch triggers deployment
 
 ## 🔧 Configuration
 
 ### **Environment Setup**
+
 - **TypeScript**: Strict mode enabled
 - **ESLint**: Code quality enforcement
 - **Prettier**: Code formatting
@@ -415,10 +440,12 @@ Automated deployment pipeline with comprehensive testing:
 - **Snyk**: Security vulnerability scanning
 
 ### **Browser Support**
+
 - Modern browsers with ES2022 support
 - Chrome 91+, Firefox 90+, Safari 14+
 
 ### **Security & Performance**
+
 - **Automated security audits** on every commit
 - **Lighthouse performance testing** with quality gates
 - **Dependency vulnerability scanning** with Snyk
@@ -434,6 +461,7 @@ Automated deployment pipeline with comprehensive testing:
 ## 🎯 Interview Highlights
 
 ### **Technical Decisions**
+
 1. **Svelte 5 Runes**: Chose cutting-edge reactive system
 2. **Service Layer Pattern**: Clean API abstraction for backend integration
 3. **TypeScript**: Full type safety throughout
@@ -442,14 +470,18 @@ Automated deployment pipeline with comprehensive testing:
 6. **Mock-to-Production**: Seamless transition from development to production
 7. **Enterprise Patterns**: Error boundaries, structured logging, performance monitoring
 8. **Configuration Management**: Environment-based configuration with type safety
+9. **Modern UX**: Toggle switches, state persistence, smooth animations
+10. **Performance**: No flash loading, optimized state management
 
 ### **AI-Assisted Development**
+
 - Leveraged AI for rapid prototyping
 - Maintained code quality standards
 - Implemented industry best practices
 - Created comprehensive test coverage
 
 ### **Production Considerations**
+
 - **API Service Layer**: Easy backend integration
 - **Authentication Ready**: Built-in token management
 - **Error Handling**: Centralized error management with custom error types
@@ -464,4 +496,7 @@ Automated deployment pipeline with comprehensive testing:
 ---
 
 **Built with ❤️ using Svelte 5, TypeScript, and modern web standards**
+
+```
+
 ```
