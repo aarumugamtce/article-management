@@ -8,52 +8,52 @@ Internal tool for managing articles built with **SvelteKit (Svelte 5 with Runes)
 ┌─────────────────────────────────────────────────────────────┐
 │                    PRESENTATION LAYER                       │
 ├─────────────────────────────────────────────────────────────┤
-│  +page.svelte (Main App)                                   │
-│  ├── ArticleCard.svelte                                    │
-│  ├── ArticleForm.svelte                                    │
-│  ├── Modal.svelte                                          │
-│  ├── Input.svelte                                          │
-│  ├── Select.svelte                                         │
-│  └── Button.svelte                                         │
+│  +page.svelte (Main App)                                    │
+│  ├── ArticleCard.svelte                                     │
+│  ├── ArticleForm.svelte                                     │
+│  ├── Modal.svelte                                           │
+│  ├── Input.svelte                                           │
+│  ├── Select.svelte                                          │
+│  └── Button.svelte                                          │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                     STATE MANAGEMENT                        │
 ├─────────────────────────────────────────────────────────────┤
-│  Svelte 5 Runes ($state, $effect, $derived)               │
-│  ├── articles.ts (Data Store)                             │
-│  ├── theme.ts (Theme Store)                               │
-│  └── role.ts (Role Store)                                 │
+│  Svelte 5 Runes ($state, $effect, $derived)                 │
+│  ├── articles.ts (Data Store)                               │
+│  ├── theme.ts (Theme Store)                                 │
+│  └── role.ts (Role Store)                                   │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    SERVICE LAYER                           │
+│                    SERVICE LAYER                            │
 ├─────────────────────────────────────────────────────────────┤
-│  API Service (articles.ts)                                │
-│  ├── ArticleAPI (Mock/SvelteKit)                          │
-│  └── ExternalArticleAPI (Real Backend)                    │
+│  API Service (articles.ts)                                  │
+│  ├── ArticleAPI (Mock/SvelteKit)                            │
+│  └── ExternalArticleAPI (Real Backend)                      │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      API LAYER                             │
+│                      API LAYER                              │
 ├─────────────────────────────────────────────────────────────┤
-│  SvelteKit API Routes (Mock)                              │
-│  └── /api/articles/+server.ts                             │
-│      ├── GET (Read with pagination/search/filter)         │
-│      ├── POST (Create)                                    │
-│      ├── PUT (Update)                                     │
-│      └── DELETE (Delete)                                  │
+│  SvelteKit API Routes (Mock)                                │
+│  └── /api/articles/+server.ts                               │
+│      ├── GET (Read with pagination/search/filter)           │
+│      ├── POST (Create)                                      │
+│      ├── PUT (Update)                                       │
+│      └── DELETE (Delete)                                    │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                     DATA LAYER                             │
+│                     DATA LAYER                              │
 ├─────────────────────────────────────────────────────────────┤
-│  In-Memory Mock Data (100 sample articles)                │
-│  └── Article Schema: { id, title, status, author, date }  │
+│  In-Memory Mock Data (100 sample articles)                  │
+│  └── Article Schema: { id, title, status, author, date }    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
