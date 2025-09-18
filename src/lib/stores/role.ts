@@ -1,27 +1,25 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
+import { STORAGE_KEYS, USER_ROLES } from '$lib/constants';
+import type { Role } from '$lib/types';
 
-export type Role = 'viewer' | 'editor';
+const getInitialRole = (): Role => {
+	if (!browser) return USER_ROLES.EDITOR;
+	return (localStorage.getItem(STORAGE_KEYS.ROLE) as Role) || USER_ROLES.EDITOR;
+};
 
-function getInitialRole(): Role {
-	if (!browser) return 'editor';
-	const stored = localStorage.getItem('role') as Role;
-	return stored || 'editor';
-}
+const createRoleStore = () => {
+	const { subscribe, set } = writable<Role>(getInitialRole());
 
-const roleStore = writable<Role>(getInitialRole());
+	return {
+		subscribe,
+		set: (role: Role) => {
+			set(role);
+			if (browser) localStorage.setItem(STORAGE_KEYS.ROLE, role);
+		}
+	};
+};
 
-export function getRole() {
-	let value: Role = 'editor';
-	roleStore.subscribe((v) => (value = v))();
-	return value;
-}
+export const roleStore = createRoleStore();
 
-export function setRole(newRole: Role) {
-	roleStore.set(newRole);
-	if (typeof localStorage !== 'undefined') {
-		localStorage.setItem('role', newRole);
-	}
-}
-
-export { roleStore };
+export const setRole = (role: Role) => roleStore.set(role);

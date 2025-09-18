@@ -8,7 +8,7 @@
 
 /* Body styling */
 body {
-	background-color: white;
+	background-color: #f9fafb;
 	color: #111827;
 }
 
@@ -27,7 +27,7 @@ body {
 
 /* Focus styles */
 *:focus {
-	outline: 2px solid #3b82f6;
+	outline: 2px solid #6b7280;
 	outline-offset: 2px;
 }
 
@@ -58,30 +58,5 @@ body {
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-	background-color: #6b7280;
-}
-
-/* Button styling for both modes */
-button {
-	background-color: #2563eb;
-}
-
-button:hover {
-	background-color: #1d4ed8;
-}
-
-button:disabled {
-	background-color: #9ca3af;
-}
-
-.dark button {
-	background-color: #3b82f6;
-}
-
-.dark button:hover {
-	background-color: #2563eb;
-}
-
-.dark button:disabled {
 	background-color: #6b7280;
 }

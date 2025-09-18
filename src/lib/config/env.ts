@@ -5,7 +5,6 @@ export const ENV = {
 	NODE_ENV: dev ? 'development' : 'production',
 	API_BASE_URL: 'https://api.airtable.com/v0', // Always use Airtable URL
 	USE_MOCK_API: true, // Default to mock, override in server
-	ENABLE_ANALYTICS: false,
 	LOG_LEVEL: dev ? 'info' : 'error'
 } as const;
 

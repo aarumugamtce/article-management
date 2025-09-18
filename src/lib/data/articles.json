@@ -1,0 +1,142 @@
+[
+	{
+		"id": 1,
+		"title": "The Art of Mindful Living",
+		"status": "Published",
+		"author": "Sarah Chen",
+		"createdAt": "2024-01-15T10:00:00Z"
+	},
+	{
+		"id": 2,
+		"title": "Sustainable Fashion Trends",
+		"status": "Draft",
+		"author": "Emma Thompson",
+		"createdAt": "2024-01-20T14:30:00Z"
+	},
+	{
+		"id": 3,
+		"title": "Home Gardening for Beginners",
+		"status": "Published",
+		"author": "Mike Rodriguez",
+		"createdAt": "2024-01-25T09:15:00Z"
+	},
+	{
+		"id": 4,
+		"title": "Travel Photography Tips",
+		"status": "Published",
+		"author": "David Kim",
+		"createdAt": "2024-02-01T16:45:00Z"
+	},
+	{
+		"id": 5,
+		"title": "Healthy Meal Prep Ideas",
+		"status": "Published",
+		"author": "Alice Johnson",
+		"createdAt": "2024-02-05T11:20:00Z"
+	},
+	{
+		"id": 6,
+		"title": "Digital Detox Benefits",
+		"status": "Draft",
+		"author": "Bob Wilson",
+		"createdAt": "2024-02-10T13:30:00Z"
+	},
+	{
+		"id": 7,
+		"title": "Budget-Friendly Home Decor",
+		"status": "Published",
+		"author": "Jane Doe",
+		"createdAt": "2024-02-12T08:45:00Z"
+	},
+	{
+		"id": 8,
+		"title": "Morning Routine Essentials",
+		"status": "Published",
+		"author": "John Smith",
+		"createdAt": "2024-02-15T07:30:00Z"
+	},
+	{
+		"id": 9,
+		"title": "Pet Care During Winter",
+		"status": "Draft",
+		"author": "Sarah Chen",
+		"createdAt": "2024-02-18T15:20:00Z"
+	},
+	{
+		"id": 10,
+		"title": "Book Club Recommendations",
+		"status": "Published",
+		"author": "Emma Thompson",
+		"createdAt": "2024-02-20T12:10:00Z"
+	},
+	{
+		"id": 11,
+		"title": "Weekend Hiking Trails",
+		"status": "Published",
+		"author": "Mike Rodriguez",
+		"createdAt": "2024-02-22T10:30:00Z"
+	},
+	{
+		"id": 12,
+		"title": "Coffee Brewing Techniques",
+		"status": "Published",
+		"author": "David Kim",
+		"createdAt": "2024-02-25T14:15:00Z"
+	},
+	{
+		"id": 13,
+		"title": "Stress Management Strategies",
+		"status": "Draft",
+		"author": "Alice Johnson",
+		"createdAt": "2024-02-28T09:45:00Z"
+	},
+	{
+		"id": 14,
+		"title": "Local Farmers Market Guide",
+		"status": "Published",
+		"author": "Bob Wilson",
+		"createdAt": "2024-03-02T11:00:00Z"
+	},
+	{
+		"id": 15,
+		"title": "Creative Writing Prompts",
+		"status": "Published",
+		"author": "Jane Doe",
+		"createdAt": "2024-03-05T16:20:00Z"
+	},
+	{
+		"id": 16,
+		"title": "Seasonal Wardrobe Essentials",
+		"status": "Published",
+		"author": "John Smith",
+		"createdAt": "2024-03-08T13:40:00Z"
+	},
+	{
+		"id": 17,
+		"title": "Indoor Air Quality Tips",
+		"status": "Draft",
+		"author": "Sarah Chen",
+		"createdAt": "2024-03-10T08:25:00Z"
+	},
+	{
+		"id": 18,
+		"title": "Community Volunteering Ideas",
+		"status": "Published",
+		"author": "Emma Thompson",
+		"createdAt": "2024-03-12T15:50:00Z"
+	},
+	{
+		"id": 19,
+		"title": "Natural Skincare Recipes",
+		"status": "Published",
+		"author": "Mike Rodriguez",
+		"createdAt": "2024-03-15T12:35:00Z"
+	},
+	{
+		"id": 20,
+		"title": "Family Game Night Ideas",
+		"status": "Published",
+		"author": "David Kim",
+		"createdAt": "2024-03-18T17:10:00Z"
+	}
+]

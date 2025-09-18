@@ -6,17 +6,19 @@ test.describe('Article Management', () => {
 		await page.setViewportSize({ width: 1024, height: 768 });
 		await page.goto('/');
 
+		// Wait for page to load
+		await page.waitForLoadState('networkidle');
+
 		// Check main heading
 		await expect(page.locator('h1')).toContainText('Article Manager');
 
 		// Check toggle switches exist
 		await expect(page.getByTitle('Toggle theme')).toBeVisible();
 		await expect(page.getByTitle('Toggle role')).toBeVisible();
-		await expect(page.getByTitle('Toggle view mode')).toBeVisible();
 
 		// Check search and filter controls exist
 		await expect(page.getByLabel('Search by Title')).toBeVisible();
-		await expect(page.getByLabel('Filter by Status')).toBeVisible();
+		await expect(page.getByText('Filter by Status')).toBeVisible();
 	});
 
 	test('should toggle between light and dark themes', async ({ page }) => {
@@ -43,18 +45,15 @@ test.describe('Article Management', () => {
 		await expect(roleToggle).toBeVisible();
 	});
 
-	test('should toggle between list and grid views', async ({ page }) => {
-		// Set desktop viewport to ensure view toggle is visible
-		await page.setViewportSize({ width: 1024, height: 768 });
+	test('should display articles', async ({ page }) => {
 		await page.goto('/');
 
-		// Get view toggle and click it
-		const viewToggle = page.getByTitle('Toggle view mode');
-		await expect(viewToggle).toBeVisible();
-		await viewToggle.click();
+		// Wait for articles to load
+		await page.waitForLoadState('networkidle');
 
-		// Verify toggle is still visible (view changed)
-		await expect(viewToggle).toBeVisible();
+		// Check if articles are displayed
+		const articles = page.locator('article');
+		await expect(articles.first()).toBeVisible();
 	});
 });
 
@@ -71,11 +70,28 @@ test.describe('Basic Functionality', () => {
 
 	test('should have working status filter', async ({ page }) => {
 		await page.goto('/');
+		await page.waitForLoadState('networkidle');
 
-		// Test status filter
-		const statusSelect = page.getByLabel('Filter by Status');
-		await expect(statusSelect).toBeVisible();
-		await statusSelect.selectOption('Published');
+		// Find the status filter section by its label
+		const filterSection = page.locator('text=Filter by Status').locator('..');
+		await expect(filterSection).toBeVisible();
+
+		// Find the dropdown button within the filter section
+		const dropdownButton = filterSection.locator('button').first();
+		await expect(dropdownButton).toBeVisible();
+		await expect(dropdownButton).toContainText('All');
+
+		// Click to open dropdown
+		await dropdownButton.click();
+
+		// Wait a bit for dropdown animation
+		await page.waitForTimeout(100);
+
+		// Click Published option from the dropdown
+		await page.locator('button:has-text("Published")').click();
+
+		// Verify the selection changed
+		await expect(dropdownButton).toContainText('Published');
 	});
 
 	test('should have scroll functionality', async ({ page }) => {

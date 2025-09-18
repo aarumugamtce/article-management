@@ -1,6 +1,7 @@
-import type { Article } from '$lib/types';
+import type { Article, ArticleInput } from '$lib/types';
 import type { ArticleFilters, ArticleResponse } from '../api/articles';
 import { MESSAGES } from '$lib/constants';
+import { AppError } from '$lib/utils/errorHandler';
 
 interface AirtableRecord {
 	id: string;
@@ -12,22 +13,19 @@ interface AirtableRecord {
 	};
 }
 
-interface AirtableResponse {
-	records: AirtableRecord[];
-	offset?: string;
-}
+const errorMap = {
+	GET: MESSAGES.ERRORS.FETCH_FAILED,
+	POST: MESSAGES.ERRORS.CREATE_FAILED,
+	PATCH: MESSAGES.ERRORS.UPDATE_FAILED,
+	DELETE: MESSAGES.ERRORS.DELETE_FAILED
+};
 
 export class AirtableAPI {
 	private baseUrl: string;
 	private headers: Record<string, string>;
-	private idMapping = new Map<number, string>(); // Store numeric ID -> Airtable record ID mapping
+	private idMapping = new Map<number, string>();
 
-	constructor(
-		baseUri: string,
-		private baseId: string,
-		private tableId: string,
-		private apiKey: string
-	) {
+	constructor(baseUri: string, baseId: string, tableId: string, apiKey: string) {
 		this.baseUrl = `${baseUri}/${baseId}/${tableId}`;
 		this.headers = {
 			Authorization: `Bearer ${apiKey}`,
@@ -36,13 +34,64 @@ export class AirtableAPI {
 	}
 
 	async getArticles(filters: ArticleFilters = {}): Promise<ArticleResponse> {
-		const params = new URLSearchParams();
-
-		// Airtable pagination - use pageSize only, no manual offset
+		const allArticles = await this.fetchAllArticles(filters);
 		const pageSize = Math.min(filters.limit || 10, 100);
-		params.set('pageSize', pageSize.toString());
+		const page = filters.page || 1;
+		const startIndex = (page - 1) * pageSize;
+		const paginatedArticles = allArticles.slice(startIndex, startIndex + pageSize);
 
-		// Airtable filtering
+		return {
+			articles: paginatedArticles,
+			total: allArticles.length,
+			page,
+			limit: pageSize
+		};
+	}
+
+	async createArticle(article: ArticleInput): Promise<Article> {
+		const data = await this.request('POST', '', {
+			fields: { Title: article.title, Status: article.status, Author: article.author }
+		});
+		return this.mapRecordToArticle(data);
+	}
+
+	async updateArticle(id: number, article: ArticleInput): Promise<Article> {
+		const airtableId = await this.getAirtableId(id);
+		const data = await this.request('PATCH', `/${airtableId}`, {
+			fields: { Title: article.title, Status: article.status, Author: article.author }
+		});
+		return this.mapRecordToArticle(data);
+	}
+
+	async deleteArticle(id: number): Promise<void> {
+		const airtableId = await this.getAirtableId(id);
+		await this.request('DELETE', `/${airtableId}`);
+	}
+
+	private async request(method: string, path: string, body?: any) {
+		const response = await fetch(`${this.baseUrl}${path}`, {
+			method,
+			headers: this.headers,
+			...(body && { body: JSON.stringify(body) })
+		});
+
+		if (!response.ok) {
+			throw new AppError(
+				errorMap[method as keyof typeof errorMap],
+				`${method}_ERROR`,
+				response.status
+			);
+		}
+
+		return method !== 'DELETE' ? response.json() : undefined;
+	}
+
+	private buildParams(filters: ArticleFilters) {
+		const params = new URLSearchParams();
+		params.set('pageSize', '100');
+		params.set('sort[0][field]', 'CreatedAt');
+		params.set('sort[0][direction]', 'desc');
+
 		const filterFormulas = [];
 		if (filters.search) {
 			filterFormulas.push(`SEARCH(LOWER("${filters.search}"), LOWER({Title}))`);
@@ -50,113 +99,26 @@ export class AirtableAPI {
 		if (filters.status && filters.status !== 'All') {
 			filterFormulas.push(`{Status} = "${filters.status}"`);
 		}
-
-		if (filterFormulas.length > 0) {
+		if (filterFormulas.length) {
 			params.set('filterByFormula', `AND(${filterFormulas.join(', ')})`);
 		}
 
-		// Sort by creation date (newest first)
-		params.set('sort[0][field]', 'CreatedAt');
-		params.set('sort[0][direction]', 'desc');
+		return params;
+	}
 
-		const response = await fetch(`${this.baseUrl}?${params}`, {
-			headers: this.headers
-		});
-
-		if (!response.ok) {
-			throw new Error(MESSAGES.ERRORS.FETCH_FAILED);
-		}
-
-		const data: AirtableResponse = await response.json();
-		const articles = data.records.map((record) => {
+	private async fetchAllArticles(filters: ArticleFilters): Promise<Article[]> {
+		const params = this.buildParams(filters);
+		const data = await this.request('GET', `?${params}`);
+		return data.records.map((record: AirtableRecord) => {
 			const article = this.mapRecordToArticle(record);
-			// Store the mapping for future updates/deletes
 			this.idMapping.set(article.id, record.id);
 			return article;
 		});
-
-		// For pagination simulation, get all records if page > 1
-		let allArticles = articles;
-		if (filters.page && filters.page > 1) {
-			// Fetch all records to simulate pagination
-			allArticles = await this.getAllArticles(filters);
-			const startIndex = (filters.page - 1) * pageSize;
-			const endIndex = startIndex + pageSize;
-			allArticles = allArticles.slice(startIndex, endIndex);
-		}
-
-		// Get actual total count
-		const actualTotal = await this.getTotalCount(filters);
-
-		return {
-			articles: allArticles,
-			total: actualTotal,
-			page: filters.page || 1,
-			limit: pageSize
-		};
-	}
-
-	async createArticle(article: Omit<Article, 'id' | 'createdAt'>): Promise<Article> {
-		const response = await fetch(this.baseUrl, {
-			method: 'POST',
-			headers: this.headers,
-			body: JSON.stringify({
-				fields: {
-					Title: article.title,
-					Status: article.status,
-					Author: article.author
-				}
-			})
-		});
-
-		if (!response.ok) {
-			throw new Error(MESSAGES.ERRORS.CREATE_FAILED);
-		}
-
-		const data: AirtableRecord = await response.json();
-		return this.mapRecordToArticle(data);
-	}
-
-	async updateArticle(id: number, article: Omit<Article, 'id' | 'createdAt'>): Promise<Article> {
-		// Convert numeric ID to Airtable record ID (you'll need to store this mapping)
-		const airtableId = await this.getAirtableId(id);
-
-		const response = await fetch(`${this.baseUrl}/${airtableId}`, {
-			method: 'PATCH',
-			headers: this.headers,
-			body: JSON.stringify({
-				fields: {
-					Title: article.title,
-					Status: article.status,
-					Author: article.author
-				}
-			})
-		});
-
-		if (!response.ok) {
-			throw new Error(MESSAGES.ERRORS.UPDATE_FAILED);
-		}
-
-		const data: AirtableRecord = await response.json();
-		return this.mapRecordToArticle(data);
-	}
-
-	async deleteArticle(id: number): Promise<void> {
-		const airtableId = await this.getAirtableId(id);
-
-		const response = await fetch(`${this.baseUrl}/${airtableId}`, {
-			method: 'DELETE',
-			headers: this.headers
-		});
-
-		if (!response.ok) {
-			throw new Error(MESSAGES.ERRORS.DELETE_FAILED);
-		}
 	}
 
 	private mapRecordToArticle(record: AirtableRecord): Article {
 		return {
-			id: this.hashAirtableId(record.id), // Convert Airtable ID to numeric
+			id: this.hashAirtableId(record.id),
 			title: record.fields.Title,
 			status: record.fields.Status,
 			author: record.fields.Author,
@@ -165,82 +127,20 @@ export class AirtableAPI {
 	}
 
 	private hashAirtableId(airtableId: string): number {
-		// Simple hash function to convert Airtable ID to number
 		let hash = 0;
 		for (let i = 0; i < airtableId.length; i++) {
-			const char = airtableId.charCodeAt(i);
-			hash = (hash << 5) - hash + char;
-			hash = hash & hash; // Convert to 32-bit integer
+			hash = ((hash << 5) - hash + airtableId.charCodeAt(i)) & 0x7fffffff;
 		}
-		return Math.abs(hash);
-	}
-
-	private async getAllArticles(filters: ArticleFilters): Promise<Article[]> {
-		const params = new URLSearchParams();
-		params.set('pageSize', '100'); // Max page size
-
-		// Apply filters
-		const filterFormulas = [];
-		if (filters.search) {
-			filterFormulas.push(`SEARCH(LOWER("${filters.search}"), LOWER({Title}))`);
-		}
-		if (filters.status && filters.status !== 'All') {
-			filterFormulas.push(`{Status} = "${filters.status}"`);
-		}
-		if (filterFormulas.length > 0) {
-			params.set('filterByFormula', `AND(${filterFormulas.join(', ')})`);
-		}
-
-		// Sort by creation date
-		params.set('sort[0][field]', 'CreatedAt');
-		params.set('sort[0][direction]', 'desc');
-
-		const response = await fetch(`${this.baseUrl}?${params}`, {
-			headers: this.headers
-		});
-
-		if (!response.ok) {
-			throw new Error(MESSAGES.ERRORS.FETCH_FAILED);
-		}
-
-		const data: AirtableResponse = await response.json();
-		return data.records.map((record) => this.mapRecordToArticle(record));
-	}
-
-	private async getTotalCount(filters: ArticleFilters): Promise<number> {
-		const params = new URLSearchParams();
-		params.set('pageSize', '1'); // Just get one record to check total
-
-		// Apply same filters as main query
-		const filterFormulas = [];
-		if (filters.search) {
-			filterFormulas.push(`SEARCH(LOWER("${filters.search}"), LOWER({Title}))`);
-		}
-		if (filters.status && filters.status !== 'All') {
-			filterFormulas.push(`{Status} = "${filters.status}"`);
-		}
-		if (filterFormulas.length > 0) {
-			params.set('filterByFormula', `AND(${filterFormulas.join(', ')})`);
-		}
-
-		// Get all records to count them (Airtable doesn't provide total count directly)
-		const allRecords = await this.getAllArticles(filters);
-		return allRecords.length;
+		return hash;
 	}
 
 	private async getAirtableId(numericId: number): Promise<string> {
-		// Check if we have the mapping in memory
 		const airtableId = this.idMapping.get(numericId);
-		if (airtableId) {
-			return airtableId;
-		}
+		if (airtableId) return airtableId;
 
-		// If not in memory, fetch all records to populate the mapping
-		await this.getAllArticles({});
+		await this.fetchAllArticles({});
 		const mappedId = this.idMapping.get(numericId);
-		if (!mappedId) {
-			throw new Error(`Article not found: ${numericId}`);
-		}
+		if (!mappedId) throw new AppError(`Article not found: ${numericId}`, 'NOT_FOUND_ERROR', 404);
 		return mappedId;
 	}
 }

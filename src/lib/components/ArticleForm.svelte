@@ -4,41 +4,59 @@
 	import Select from './Select.svelte';
 	import Button from './Button.svelte';
 
-	const props = $props<{
+	type FormData = Omit<Article, 'id' | 'createdAt'>;
+
+	const { article, onSubmit } = $props<{
 		article?: Article;
-		onSubmit?: (data: Omit<Article, 'id' | 'createdAt'>) => void;
+		onSubmit?: (data: FormData) => void;
 	}>();
 
-	let title = $state(props.article?.title ?? '');
-	let status = $state<'Published' | 'Draft'>(props.article?.status ?? 'Draft');
-	let author = $state(props.article?.author ?? '');
+	let form = $state<FormData>({
+		title: article?.title ?? '',
+		status: article?.status ?? 'Draft',
+		author: article?.author ?? ''
+	});
 
 	let errors = $state<Record<string, string>>({});
 
-	function validate() {
-		const newErrors: Record<string, string> = {};
-		if (!title.trim()) newErrors.title = 'Title is required';
-		if (!author.trim()) newErrors.author = 'Author is required';
-		errors = newErrors;
-		return Object.keys(newErrors).length === 0;
-	}
+	const validate = () => {
+		errors = {
+			...(!form.title.trim() && { title: 'Title is required' }),
+			...(!form.author.trim() && { author: 'Author is required' })
+		};
+		return !Object.keys(errors).length;
+	};
 
-	function handleSubmit(e: Event) {
+	const handleSubmit = (e: Event) => {
 		e.preventDefault();
 		if (validate()) {
-			props.onSubmit?.({ title: title.trim(), status, author: author.trim() });
+			onSubmit?.({
+				title: form.title.trim(),
+				status: form.status,
+				author: form.author.trim()
+			});
 		}
-	}
+	};
 </script>
 
 <form onsubmit={handleSubmit}>
-	<Input label="Title" value={title} error={errors.title} onInput={(val) => (title = val)} />
+	<Input
+		label="Title"
+		value={form.title}
+		error={errors.title}
+		onInput={(val) => (form.title = val)}
+	/>
 	<Select
 		label="Status"
-		value={status}
-		onChange={(val) => (status = val as 'Published' | 'Draft')}
+		value={form.status}
+		onChange={(val) => (form.status = val as 'Published' | 'Draft')}
 		options={['Published', 'Draft']}
 	/>
-	<Input label="Author" value={author} error={errors.author} onInput={(val) => (author = val)} />
+	<Input
+		label="Author"
+		value={form.author}
+		error={errors.author}
+		onInput={(val) => (form.author = val)}
+	/>
 	<Button type="submit">Save</Button>
 </form>

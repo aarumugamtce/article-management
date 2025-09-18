@@ -1,32 +1,28 @@
 import { describe, it, expect } from 'vitest';
 
-// Simple validation utility functions
-export function validateArticleForm(title: string, author: string) {
+function validateArticleForm(title: string, author: string) {
 	const errors: Record<string, string> = {};
 	if (!title.trim()) errors.title = 'Title is required';
 	if (!author.trim()) errors.author = 'Author is required';
 	return { isValid: Object.keys(errors).length === 0, errors };
 }
 
-export function formatDate(dateString: string): string {
+function formatDate(dateString: string): string {
 	return new Date(dateString).toLocaleDateString();
 }
 
 describe('Validation Utilities', () => {
 	describe('validateArticleForm', () => {
 		it('should validate required fields', () => {
-			// Test empty fields
 			const result1 = validateArticleForm('', '');
 			expect(result1.isValid).toBe(false);
 			expect(result1.errors.title).toBe('Title is required');
 			expect(result1.errors.author).toBe('Author is required');
 
-			// Test valid fields
 			const result2 = validateArticleForm('Test Title', 'Test Author');
 			expect(result2.isValid).toBe(true);
 			expect(Object.keys(result2.errors)).toHaveLength(0);
 
-			// Test whitespace-only fields
 			const result3 = validateArticleForm('   ', '   ');
 			expect(result3.isValid).toBe(false);
 		});
@@ -36,7 +32,7 @@ describe('Validation Utilities', () => {
 		it('should format ISO date string to locale date', () => {
 			const isoDate = '2024-05-01T12:00:00Z';
 			const formatted = formatDate(isoDate);
-			expect(formatted).toMatch(/\d{1,2}\/\d{1,2}\/\d{4}/); // Basic date format check
+			expect(formatted).toMatch(/\d{1,2}\/\d{1,2}\/\d{4}/);
 		});
 	});
 });

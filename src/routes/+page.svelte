@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { Article } from '$lib/types';
+	import { browser } from '$app/environment';
+	import type { Article, ArticleInput } from '$lib/types';
 	import { roleStore, setRole } from '$lib/stores/role';
 	import { themeStore, setTheme } from '$lib/stores/theme';
-
 	import { PAGINATION, OBSERVER_CONFIG, MESSAGES } from '$lib/constants';
 	import Modal from '$lib/components/Modal.svelte';
 	import ArticleForm from '$lib/components/ArticleForm.svelte';
@@ -12,67 +12,34 @@
 	import Select from '$lib/components/Select.svelte';
 	import Button from '$lib/components/Button.svelte';
 
-	// Initialize from localStorage to persist across refreshes
-	let search = $state(
-		typeof localStorage !== 'undefined' ? localStorage.getItem('search') || '' : ''
-	);
-	let status = $state(
-		typeof localStorage !== 'undefined' ? localStorage.getItem('status') || '' : ''
-	);
-	let viewMode = $state<'list' | 'grid'>(
-		typeof localStorage !== 'undefined'
-			? (localStorage.getItem('viewMode') as 'list' | 'grid') || 'list'
-			: 'list'
-	);
-
+	// State
+	let search = $state(browser ? localStorage.getItem('search') || '' : '');
+	let status = $state(browser ? localStorage.getItem('status') || '' : '');
 	let page = $state(1);
 	let total = $state(0);
 	let loading = $state(false);
-	let error = $state<string | undefined>();
+	let error = $state<string>();
 	let modalOpen = $state(false);
-	let editingArticle = $state<Article | undefined>();
+	let editingArticle = $state<Article>();
 	let hasMore = $state(true);
 	let loadMoreRef = $state<HTMLElement>();
 	let displayedArticles = $state<Article[]>([]);
 	let showScrollTop = $state(false);
 
-	let currentTheme = $state('dark');
-	let currentRole = $state(
-		typeof document !== 'undefined'
-			? (document.documentElement.getAttribute('data-role') as 'editor' | 'viewer') || 'editor'
-			: 'editor'
-	);
+	// Store subscriptions
+	let currentTheme = $state($themeStore);
+	let currentRole = $state($roleStore);
 
 	$effect(() => {
-		const unsubTheme = themeStore.subscribe((v) => (currentTheme = v));
-		const unsubRole = roleStore.subscribe((v) => {
-			currentRole = v;
-			if (typeof localStorage !== 'undefined') {
-				localStorage.setItem('role', v);
-			}
-		});
-		return () => {
-			unsubTheme();
-			unsubRole();
-		};
+		currentTheme = $themeStore;
+		currentRole = $roleStore;
 	});
 
-	// Persist search, status, and viewMode to localStorage
+	// Persist to localStorage
 	$effect(() => {
-		if (typeof localStorage !== 'undefined') {
+		if (browser) {
 			localStorage.setItem('search', search);
-		}
-	});
-
-	$effect(() => {
-		if (typeof localStorage !== 'undefined') {
 			localStorage.setItem('status', status);
-		}
-	});
-
-	$effect(() => {
-		if (typeof localStorage !== 'undefined') {
-			localStorage.setItem('viewMode', viewMode);
 		}
 	});
 
@@ -117,6 +84,8 @@
 			lastStatus = status;
 			page = 1;
 			displayedArticles = [];
+			hasMore = true; // Reset hasMore to prevent flash
+			total = 0; // Reset total
 			fetchArticles();
 		}
 	});
@@ -125,71 +94,60 @@
 	let observer: IntersectionObserver | undefined;
 
 	$effect(() => {
-		if (typeof window !== 'undefined' && loadMoreRef) {
+		if (browser && loadMoreRef) {
 			if (observer) observer.disconnect();
-
 			observer = new IntersectionObserver(
-				(entries) => {
-					if (entries[0].isIntersecting && hasMore && !loading) {
-						page = page + 1;
+				([entry]) => {
+					if (entry.isIntersecting && hasMore && !loading) {
+						page++;
 						fetchArticles(true);
 					}
 				},
 				{ threshold: OBSERVER_CONFIG.THRESHOLD }
 			);
-
 			observer.observe(loadMoreRef);
 		}
-
-		return () => {
-			if (observer) {
-				observer.disconnect();
-				observer = undefined;
-			}
-		};
+		return () => observer?.disconnect();
 	});
 
 	$effect(() => {
-		if (typeof window !== 'undefined') {
+		if (browser) {
 			document.documentElement.classList.toggle('dark', currentTheme === 'dark');
-
-			// Scroll to top button visibility
-			const handleScroll = () => {
-				showScrollTop = window.scrollY > 300;
-			};
-
+			const handleScroll = () => (showScrollTop = window.scrollY > 300);
 			window.addEventListener('scroll', handleScroll);
 			return () => window.removeEventListener('scroll', handleScroll);
 		}
 	});
 
-	async function handleDelete(id: number) {
+	const handleSubmit = async (data: ArticleInput) => {
 		try {
 			const { articleAPI } = await import('$lib/api/articles');
-			await articleAPI.deleteArticle(id);
-			await fetchArticles();
-		} catch (e) {
-			error = e instanceof Error ? e.message : MESSAGES.ERRORS.DELETE_FAILED;
-		}
-	}
-
-	async function handleSubmit(data: Omit<Article, 'id' | 'createdAt'>) {
-		try {
-			const { articleAPI } = await import('$lib/api/articles');
-
 			if (editingArticle) {
 				await articleAPI.updateArticle(editingArticle.id, data);
 			} else {
 				await articleAPI.createArticle(data);
 			}
-
 			modalOpen = false;
 			editingArticle = undefined;
+			page = 1;
+			displayedArticles = [];
 			await fetchArticles();
 		} catch (e) {
 			error = e instanceof Error ? e.message : MESSAGES.ERRORS.SAVE_FAILED;
 		}
-	}
+	};
+
+	const handleDelete = async (id: number) => {
+		try {
+			const { articleAPI } = await import('$lib/api/articles');
+			await articleAPI.deleteArticle(id);
+			page = 1;
+			displayedArticles = [];
+			await fetchArticles();
+		} catch (e) {
+			error = e instanceof Error ? e.message : MESSAGES.ERRORS.DELETE_FAILED;
+		}
+	};
 </script>
 
 <svelte:head>
@@ -203,7 +161,7 @@
 		(function () {
 			const storedTheme = localStorage.getItem('theme');
 			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-			const theme = storedTheme || (prefersDark ? 'dark' : 'dark'); // Default to dark
+			const theme = storedTheme || (prefersDark ? 'dark' : 'light');
 			if (theme === 'dark') {
 				document.documentElement.classList.add('dark');
 			}
@@ -216,23 +174,25 @@
 	</script>
 </svelte:head>
 
-<header class="sticky top-0 z-40 bg-white p-4 shadow-sm dark:bg-gray-900">
+<header
+	class="sticky top-0 z-40 border-b border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+>
 	<h1 class="mb-4 text-3xl font-bold text-gray-900 dark:text-gray-100">Article Manager</h1>
 
 	<div class="mb-4 flex flex-wrap items-center gap-4">
 		<!-- Theme Toggle -->
 		<div
-			class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
+			class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
 		>
 			<span class="text-sm text-gray-700 dark:text-gray-300">☀️</span>
 			<button
 				onclick={() => setTheme(currentTheme === 'light' ? 'dark' : 'light')}
 				title="Toggle theme"
 				aria-label="Toggle theme"
-				class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {currentTheme ===
+				class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none {currentTheme ===
 				'dark'
-					? 'bg-blue-600'
-					: 'bg-gray-200'}"
+					? '!bg-gray-600'
+					: '!bg-gray-300'}"
 			>
 				<span
 					class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {currentTheme ===
@@ -246,17 +206,17 @@
 
 		<!-- Role Toggle -->
 		<div
-			class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
+			class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
 		>
 			<span class="text-sm text-gray-700 dark:text-gray-300">Viewer</span>
 			<button
 				onclick={() => setRole(currentRole === 'editor' ? 'viewer' : 'editor')}
 				title="Toggle role"
 				aria-label="Toggle role"
-				class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {currentRole ===
+				class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none {currentRole ===
 				'editor'
-					? 'bg-blue-600'
-					: 'bg-gray-200'}"
+					? '!bg-gray-600'
+					: '!bg-gray-300'}"
 			>
 				<span
 					class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {currentRole ===
@@ -266,30 +226,6 @@
 				></span>
 			</button>
 			<span class="text-sm text-gray-700 dark:text-gray-300">Editor</span>
-		</div>
-
-		<!-- View Toggle - Hidden on mobile -->
-		<div
-			class="hidden items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 md:flex dark:border-gray-600 dark:bg-gray-800"
-		>
-			<span class="text-sm text-gray-700 dark:text-gray-300">📋</span>
-			<button
-				onclick={() => (viewMode = viewMode === 'list' ? 'grid' : 'list')}
-				title="Toggle view mode"
-				aria-label="Toggle view mode"
-				class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {viewMode ===
-				'grid'
-					? 'bg-blue-600'
-					: 'bg-gray-200'}"
-			>
-				<span
-					class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {viewMode ===
-					'grid'
-						? 'translate-x-6'
-						: 'translate-x-1'}"
-				></span>
-			</button>
-			<span class="text-sm text-gray-700 dark:text-gray-300">⊞</span>
 		</div>
 	</div>
 
@@ -318,7 +254,7 @@
 	{/if}
 </header>
 
-<main class="min-h-screen p-4 transition-colors">
+<main class="min-h-screen bg-gray-50 p-4 transition-colors dark:bg-gray-900">
 	{#if loading && page === 1}
 		<div class="py-8 text-center" aria-live="polite">
 			<p>Loading articles...</p>
@@ -341,12 +277,7 @@
 		</div>
 	{:else}
 		<section>
-			<ul
-				class={viewMode === 'grid'
-					? 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'
-					: 'space-y-4'}
-				role="list"
-			>
+			<ul class="space-y-4" role="list">
 				{#each displayedArticles as art (art.id)}
 					<li>
 						<ArticleCard
@@ -361,22 +292,24 @@
 				{/each}
 			</ul>
 
-			<div
-				bind:this={loadMoreRef}
-				class="mt-8 flex h-20 items-center justify-center border-2 border-dashed border-gray-300"
-			>
-				{#if loading && page > 1}
-					<p aria-live="polite">{MESSAGES.LOADING.MORE_ARTICLES}</p>
-				{:else if !hasMore && displayedArticles.length > 0}
-					<p class="text-gray-500 dark:text-gray-400">
-						{MESSAGES.EMPTY_STATES.NO_MORE_ARTICLES} ({displayedArticles.length} total)
-					</p>
-				{:else if hasMore}
-					<p class="text-gray-600 dark:text-gray-300">
-						Scroll to load more... (Page {page}, {displayedArticles.length}/{total})
-					</p>
-				{/if}
-			</div>
+			{#if displayedArticles.length > 0 && !loading}
+				<div
+					bind:this={loadMoreRef}
+					class="mt-8 flex h-20 items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600"
+				>
+					{#if loading && page > 1}
+						<p aria-live="polite">{MESSAGES.LOADING.MORE_ARTICLES}</p>
+					{:else if !hasMore && total > 0}
+						<p class="text-gray-500 dark:text-gray-400">
+							{MESSAGES.EMPTY_STATES.NO_MORE_ARTICLES} ({displayedArticles.length} total)
+						</p>
+					{:else if hasMore && total > 0}
+						<p class="text-gray-600 dark:text-gray-300">
+							Scroll to load more... (Page {page}, {displayedArticles.length}/{total})
+						</p>
+					{/if}
+				</div>
+			{/if}
 		</section>
 	{/if}
 
@@ -397,7 +330,7 @@
 	{#if showScrollTop}
 		<button
 			onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-			class="fixed right-6 bottom-6 z-50 rounded-full border border-gray-300 bg-gray-100 p-3 text-gray-900 shadow-lg transition-all hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+			class="fixed right-6 bottom-6 z-50 rounded-full border border-gray-300 bg-white p-3 text-gray-900 shadow-lg transition-all hover:bg-gray-50 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
 			aria-label="Scroll to top"
 			title="Go to top"
 		>

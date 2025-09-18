@@ -11,26 +11,23 @@ export class AppError extends Error {
 	}
 }
 
-export function handleApiError(error: unknown): string {
-	if (error instanceof AppError) {
-		return error.message;
+export const isRetryableError = (error: unknown): boolean => {
+	if (error instanceof AppError && error.statusCode) {
+		return [408, 429, 500, 502, 503, 504].includes(error.statusCode);
 	}
+	return error instanceof TypeError && error.message.includes('fetch');
+};
 
-	if (error instanceof Error) {
-		return error.message;
-	}
-
+export const handleApiError = (error: unknown): string => {
+	if (error instanceof AppError) return error.message;
+	if (error instanceof Error) return error.message;
 	return MESSAGES.ERRORS.FETCH_FAILED;
-}
+};
 
-export function logError(error: unknown, context?: string): void {
-	const errorInfo = {
+export const logError = (error: unknown, context?: string): void => {
+	console.error('Error:', {
 		message: error instanceof Error ? error.message : 'Unknown error',
-		stack: error instanceof Error ? error.stack : undefined,
 		context,
 		timestamp: new Date().toISOString()
-	};
-
-	// In production, send to logging service
-	console.error('Application Error:', errorInfo);
-}
+	});
+};

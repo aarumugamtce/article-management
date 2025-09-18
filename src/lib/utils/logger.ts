@@ -1,43 +1,19 @@
-import { ENV } from '$lib/config/env';
+const timestamp = () => new Date().toISOString();
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export const logger = {
+	debug: (message: string, data?: unknown) => {
+		console.debug(`[${timestamp()}] ${message}`, data);
+	},
 
-class Logger {
-	private logLevel: LogLevel = ENV.LOG_LEVEL as LogLevel;
+	info: (message: string, data?: unknown) => {
+		console.info(`[${timestamp()}] ${message}`, data);
+	},
 
-	private shouldLog(level: LogLevel): boolean {
-		const levels: Record<LogLevel, number> = {
-			debug: 0,
-			info: 1,
-			warn: 2,
-			error: 3
-		};
-		return levels[level] >= levels[this.logLevel];
+	warn: (message: string, data?: unknown) => {
+		console.warn(`[${timestamp()}] ${message}`, data);
+	},
+
+	error: (message: string, error?: unknown) => {
+		console.error(`[${timestamp()}] ${message}`, error);
 	}
-
-	debug(message: string, data?: unknown): void {
-		if (this.shouldLog('debug')) {
-			console.debug(`[DEBUG] ${message}`, data);
-		}
-	}
-
-	info(message: string, data?: unknown): void {
-		if (this.shouldLog('info')) {
-			console.info(`[INFO] ${message}`, data);
-		}
-	}
-
-	warn(message: string, data?: unknown): void {
-		if (this.shouldLog('warn')) {
-			console.warn(`[WARN] ${message}`, data);
-		}
-	}
-
-	error(message: string, error?: unknown): void {
-		if (this.shouldLog('error')) {
-			console.error(`[ERROR] ${message}`, error);
-		}
-	}
-}
-
-export const logger = new Logger();
+};

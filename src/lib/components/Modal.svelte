@@ -2,33 +2,26 @@
 	import type { Snippet } from 'svelte';
 	import Button from './Button.svelte';
 
-	let {
-		isOpen,
-		onClose,
-		children
-	}: {
+	const { isOpen, onClose, children } = $props<{
 		isOpen: boolean;
 		onClose: () => void;
 		children?: Snippet;
-	} = $props();
+	}>();
 
 	let modalRef = $state<HTMLElement>();
 
 	$effect(() => {
-		if (isOpen) {
-			document.body.style.overflow = 'hidden';
-			modalRef?.focus();
-		}
-		return () => {
-			document.body.style.overflow = '';
-		};
+		document.body.style.overflow = isOpen ? 'hidden' : '';
+		if (isOpen) modalRef?.focus();
 	});
 
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			onClose();
-		}
-	}
+	const handleKeydown = (e: KeyboardEvent) => {
+		if (e.key === 'Escape') onClose();
+	};
+
+	const handleBackdropClick = (e: MouseEvent) => {
+		if (e.target === e.currentTarget) onClose();
+	};
 </script>
 
 {#if isOpen}
@@ -37,15 +30,12 @@
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
-		onclick={(e) => {
-			if (e.target === e.currentTarget) onClose();
-		}}
+		onclick={handleBackdropClick}
 		onkeydown={handleKeydown}
 	>
 		<div
 			bind:this={modalRef}
 			tabindex="-1"
-			role="document"
 			class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 text-gray-900 shadow-xl dark:bg-gray-800 dark:text-gray-100"
 		>
 			<div class="mb-4 flex justify-end">

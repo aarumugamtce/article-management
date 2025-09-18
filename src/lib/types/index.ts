@@ -5,3 +5,7 @@ export interface Article {
 	author: string;
 	createdAt: string; // ISO string
 }
+
+export type ArticleInput = Omit<Article, 'id' | 'createdAt'>;
+export type Role = 'viewer' | 'editor';
+export type Theme = 'light' | 'dark';

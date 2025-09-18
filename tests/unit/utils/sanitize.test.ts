@@ -29,7 +29,7 @@ describe('Sanitize Utilities', () => {
 			const input = {
 				title: '<script>alert("title")</script>',
 				author: '"Malicious" Author',
-				status: 'Published'
+				status: 'Published' as const
 			};
 
 			const result = sanitizeArticleData(input);

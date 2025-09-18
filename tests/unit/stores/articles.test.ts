@@ -9,7 +9,6 @@ import type { Article } from '../../../src/lib/types';
 
 describe('Articles Store', () => {
 	beforeEach(() => {
-		// Reset articles to initial state
 		articles.value.length = 0;
 		articles.value.push(
 			{
@@ -41,7 +40,7 @@ describe('Articles Store', () => {
 		const updatedArticles = articles.get();
 		expect(updatedArticles).toHaveLength(initialCount + 1);
 
-		const newArticle = updatedArticles[0]; // New articles are now added to the beginning
+		const newArticle = updatedArticles[0];
 		expect(newArticle.title).toBe('New Article');
 		expect(newArticle.status).toBe('Draft');
 		expect(newArticle.author).toBe('Test Author');
@@ -89,7 +88,6 @@ describe('Articles Store', () => {
 			createdAt: '2024-01-01T00:00:00Z'
 		});
 
-		// Should remain unchanged
 		expect(articles.get()).toEqual(initialArticles);
 	});
 
@@ -98,7 +96,6 @@ describe('Articles Store', () => {
 
 		deleteArticle(999);
 
-		// Should remain unchanged
 		expect(articles.get()).toEqual(initialArticles);
 	});
 });

@@ -1,39 +1,29 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
+import { STORAGE_KEYS, THEMES } from '$lib/constants';
+import type { Theme } from '$lib/types';
 
-export type Theme = 'light' | 'dark';
+const getInitialTheme = (): Theme => {
+	if (!browser) return THEMES.LIGHT;
 
-// Industry standard: Respect user's system preference, fallback to dark
-function getInitialTheme(): Theme {
-	if (!browser) return 'dark';
-
-	// Check localStorage first
-	const stored = localStorage.getItem('theme') as Theme;
+	const stored = localStorage.getItem(STORAGE_KEYS.THEME) as Theme;
 	if (stored) return stored;
 
-	// Check system preference (industry standard)
-	if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-		return 'dark';
-	}
+	return window.matchMedia('(prefers-color-scheme: dark)').matches ? THEMES.DARK : THEMES.LIGHT;
+};
 
-	// Default to dark
-	return 'dark';
-}
+const createThemeStore = () => {
+	const { subscribe, set } = writable<Theme>(getInitialTheme());
 
-const themeStore = writable<Theme>(getInitialTheme());
+	return {
+		subscribe,
+		set: (theme: Theme) => {
+			set(theme);
+			if (browser) localStorage.setItem(STORAGE_KEYS.THEME, theme);
+		}
+	};
+};
 
-export function getTheme() {
-	let value: Theme = 'dark';
-	themeStore.subscribe((v) => (value = v))();
-	return value;
-}
+export const themeStore = createThemeStore();
 
-export function setTheme(newTheme: Theme) {
-	themeStore.set(newTheme);
-	// Persist to localStorage (industry standard)
-	if (browser) {
-		localStorage.setItem('theme', newTheme);
-	}
-}
-
-export { themeStore };
+export const setTheme = (theme: Theme) => themeStore.set(theme);
