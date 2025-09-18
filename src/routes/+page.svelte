@@ -216,194 +216,192 @@
 	</script>
 </svelte:head>
 
-<main class="min-h-screen transition-colors">
-	<header class="sticky top-0 z-40 bg-white p-4 shadow-sm dark:bg-gray-900">
-		<h1 class="mb-4 text-3xl font-bold text-gray-900 dark:text-gray-100">Article Manager</h1>
+<header class="sticky top-0 z-40 bg-white p-4 shadow-sm dark:bg-gray-900">
+	<h1 class="mb-4 text-3xl font-bold text-gray-900 dark:text-gray-100">Article Manager</h1>
 
-		<div class="mb-4 flex flex-wrap items-center gap-4">
-			<!-- Theme Toggle -->
-			<div
-				class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
-			>
-				<span class="text-sm text-gray-700 dark:text-gray-300">☀️</span>
-				<button
-					onclick={() => setTheme(currentTheme === 'light' ? 'dark' : 'light')}
-					title="Toggle theme"
-					aria-label="Toggle theme"
-					class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {currentTheme ===
-					'dark'
-						? 'bg-blue-600'
-						: 'bg-gray-200'}"
-				>
-					<span
-						class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {currentTheme ===
-						'dark'
-							? 'translate-x-6'
-							: 'translate-x-1'}"
-					></span>
-				</button>
-				<span class="text-sm text-gray-700 dark:text-gray-300">🌙</span>
-			</div>
-
-			<!-- Role Toggle -->
-			<div
-				class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
-			>
-				<span class="text-sm text-gray-700 dark:text-gray-300">Viewer</span>
-				<button
-					onclick={() => setRole(currentRole === 'editor' ? 'viewer' : 'editor')}
-					title="Toggle role"
-					aria-label="Toggle role"
-					class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {currentRole ===
-					'editor'
-						? 'bg-blue-600'
-						: 'bg-gray-200'}"
-				>
-					<span
-						class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {currentRole ===
-						'editor'
-							? 'translate-x-6'
-							: 'translate-x-1'}"
-					></span>
-				</button>
-				<span class="text-sm text-gray-700 dark:text-gray-300">Editor</span>
-			</div>
-
-			<!-- View Toggle - Hidden on mobile -->
-			<div
-				class="hidden items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 md:flex dark:border-gray-600 dark:bg-gray-800"
-			>
-				<span class="text-sm text-gray-700 dark:text-gray-300">📋</span>
-				<button
-					onclick={() => (viewMode = viewMode === 'list' ? 'grid' : 'list')}
-					title="Toggle view mode"
-					aria-label="Toggle view mode"
-					class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {viewMode ===
-					'grid'
-						? 'bg-blue-600'
-						: 'bg-gray-200'}"
-				>
-					<span
-						class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {viewMode ===
-						'grid'
-							? 'translate-x-6'
-							: 'translate-x-1'}"
-					></span>
-				</button>
-				<span class="text-sm text-gray-700 dark:text-gray-300">⊞</span>
-			</div>
-		</div>
-
-		<div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-			<Input
-				label="Search by Title"
-				placeholder="Type to search articles..."
-				value={search}
-				onInput={(val) => (search = val)}
-			/>
-			<Select
-				label="Filter by Status"
-				value={status}
-				onChange={(val) => (status = val)}
-				options={['All', 'Published', 'Draft']}
-			/>
-		</div>
-
-		{#if currentRole === 'editor'}
-			<Button
-				onclick={() => {
-					modalOpen = true;
-					editingArticle = undefined;
-				}}>+ Add Article</Button
-			>
-		{/if}
-	</header>
-
-	<section class="p-4">
-		{#if loading && page === 1}
-			<div class="py-8 text-center" aria-live="polite">
-				<p>Loading articles...</p>
-			</div>
-		{/if}
-
-		{#if error}
-			<div
-				class="mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700 dark:border-red-600 dark:bg-red-900/50 dark:text-red-200"
-				role="alert"
-				aria-live="assertive"
-			>
-				{error}
-			</div>
-		{/if}
-
-		{#if displayedArticles.length === 0 && !loading}
-			<div class="py-8 text-center text-gray-500 dark:text-gray-400">
-				<p>{MESSAGES.EMPTY_STATES.NO_ARTICLES}</p>
-			</div>
-		{:else}
-			<section>
-				<ul
-					class={viewMode === 'grid'
-						? 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'
-						: 'space-y-4'}
-					role="list"
-				>
-					{#each displayedArticles as art (art.id)}
-						<li>
-							<ArticleCard
-								article={art}
-								onEdit={() => {
-									editingArticle = art;
-									modalOpen = true;
-								}}
-								onDelete={() => handleDelete(art.id)}
-							/>
-						</li>
-					{/each}
-				</ul>
-
-				<div
-					bind:this={loadMoreRef}
-					class="mt-8 flex h-20 items-center justify-center border-2 border-dashed border-gray-300"
-				>
-					{#if loading && page > 1}
-						<p aria-live="polite">{MESSAGES.LOADING.MORE_ARTICLES}</p>
-					{:else if !hasMore && displayedArticles.length > 0}
-						<p class="text-gray-500 dark:text-gray-400">
-							{MESSAGES.EMPTY_STATES.NO_MORE_ARTICLES} ({displayedArticles.length} total)
-						</p>
-					{:else if hasMore}
-						<p class="text-gray-600 dark:text-gray-300">
-							Scroll to load more... (Page {page}, {displayedArticles.length}/{total})
-						</p>
-					{/if}
-				</div>
-			</section>
-		{/if}
-
-		<Modal
-			isOpen={modalOpen}
-			onClose={() => {
-				modalOpen = false;
-				editingArticle = undefined;
-			}}
+	<div class="mb-4 flex flex-wrap items-center gap-4">
+		<!-- Theme Toggle -->
+		<div
+			class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
 		>
-			<h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-gray-100">
-				{editingArticle ? 'Edit Article' : 'Add New Article'}
-			</h2>
-			<ArticleForm article={editingArticle} onSubmit={handleSubmit} />
-		</Modal>
-
-		<!-- Scroll to Top Button -->
-		{#if showScrollTop}
+			<span class="text-sm text-gray-700 dark:text-gray-300">☀️</span>
 			<button
-				onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-				class="fixed right-6 bottom-6 z-50 rounded-full border border-gray-300 bg-gray-100 p-3 text-gray-900 shadow-lg transition-all hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-				aria-label="Scroll to top"
-				title="Go to top"
+				onclick={() => setTheme(currentTheme === 'light' ? 'dark' : 'light')}
+				title="Toggle theme"
+				aria-label="Toggle theme"
+				class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {currentTheme ===
+				'dark'
+					? 'bg-blue-600'
+					: 'bg-gray-200'}"
 			>
-				↑
+				<span
+					class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {currentTheme ===
+					'dark'
+						? 'translate-x-6'
+						: 'translate-x-1'}"
+				></span>
 			</button>
-		{/if}
-	</section>
+			<span class="text-sm text-gray-700 dark:text-gray-300">🌙</span>
+		</div>
+
+		<!-- Role Toggle -->
+		<div
+			class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
+		>
+			<span class="text-sm text-gray-700 dark:text-gray-300">Viewer</span>
+			<button
+				onclick={() => setRole(currentRole === 'editor' ? 'viewer' : 'editor')}
+				title="Toggle role"
+				aria-label="Toggle role"
+				class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {currentRole ===
+				'editor'
+					? 'bg-blue-600'
+					: 'bg-gray-200'}"
+			>
+				<span
+					class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {currentRole ===
+					'editor'
+						? 'translate-x-6'
+						: 'translate-x-1'}"
+				></span>
+			</button>
+			<span class="text-sm text-gray-700 dark:text-gray-300">Editor</span>
+		</div>
+
+		<!-- View Toggle - Hidden on mobile -->
+		<div
+			class="hidden items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 md:flex dark:border-gray-600 dark:bg-gray-800"
+		>
+			<span class="text-sm text-gray-700 dark:text-gray-300">📋</span>
+			<button
+				onclick={() => (viewMode = viewMode === 'list' ? 'grid' : 'list')}
+				title="Toggle view mode"
+				aria-label="Toggle view mode"
+				class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none {viewMode ===
+				'grid'
+					? 'bg-blue-600'
+					: 'bg-gray-200'}"
+			>
+				<span
+					class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {viewMode ===
+					'grid'
+						? 'translate-x-6'
+						: 'translate-x-1'}"
+				></span>
+			</button>
+			<span class="text-sm text-gray-700 dark:text-gray-300">⊞</span>
+		</div>
+	</div>
+
+	<div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+		<Input
+			label="Search by Title"
+			placeholder="Type to search articles..."
+			value={search}
+			onInput={(val) => (search = val)}
+		/>
+		<Select
+			label="Filter by Status"
+			value={status}
+			onChange={(val) => (status = val)}
+			options={['All', 'Published', 'Draft']}
+		/>
+	</div>
+
+	{#if currentRole === 'editor'}
+		<Button
+			onclick={() => {
+				modalOpen = true;
+				editingArticle = undefined;
+			}}>+ Add Article</Button
+		>
+	{/if}
+</header>
+
+<main class="min-h-screen p-4 transition-colors">
+	{#if loading && page === 1}
+		<div class="py-8 text-center" aria-live="polite">
+			<p>Loading articles...</p>
+		</div>
+	{/if}
+
+	{#if error}
+		<div
+			class="mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700 dark:border-red-600 dark:bg-red-900/50 dark:text-red-200"
+			role="alert"
+			aria-live="assertive"
+		>
+			{error}
+		</div>
+	{/if}
+
+	{#if displayedArticles.length === 0 && !loading}
+		<div class="py-8 text-center text-gray-500 dark:text-gray-400">
+			<p>{MESSAGES.EMPTY_STATES.NO_ARTICLES}</p>
+		</div>
+	{:else}
+		<section>
+			<ul
+				class={viewMode === 'grid'
+					? 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'
+					: 'space-y-4'}
+				role="list"
+			>
+				{#each displayedArticles as art (art.id)}
+					<li>
+						<ArticleCard
+							article={art}
+							onEdit={() => {
+								editingArticle = art;
+								modalOpen = true;
+							}}
+							onDelete={() => handleDelete(art.id)}
+						/>
+					</li>
+				{/each}
+			</ul>
+
+			<div
+				bind:this={loadMoreRef}
+				class="mt-8 flex h-20 items-center justify-center border-2 border-dashed border-gray-300"
+			>
+				{#if loading && page > 1}
+					<p aria-live="polite">{MESSAGES.LOADING.MORE_ARTICLES}</p>
+				{:else if !hasMore && displayedArticles.length > 0}
+					<p class="text-gray-500 dark:text-gray-400">
+						{MESSAGES.EMPTY_STATES.NO_MORE_ARTICLES} ({displayedArticles.length} total)
+					</p>
+				{:else if hasMore}
+					<p class="text-gray-600 dark:text-gray-300">
+						Scroll to load more... (Page {page}, {displayedArticles.length}/{total})
+					</p>
+				{/if}
+			</div>
+		</section>
+	{/if}
+
+	<Modal
+		isOpen={modalOpen}
+		onClose={() => {
+			modalOpen = false;
+			editingArticle = undefined;
+		}}
+	>
+		<h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-gray-100">
+			{editingArticle ? 'Edit Article' : 'Add New Article'}
+		</h2>
+		<ArticleForm article={editingArticle} onSubmit={handleSubmit} />
+	</Modal>
+
+	<!-- Scroll to Top Button -->
+	{#if showScrollTop}
+		<button
+			onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+			class="fixed right-6 bottom-6 z-50 rounded-full border border-gray-300 bg-gray-100 p-3 text-gray-900 shadow-lg transition-all hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+			aria-label="Scroll to top"
+			title="Go to top"
+		>
+			↑
+		</button>
+	{/if}
 </main>

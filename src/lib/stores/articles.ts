@@ -105,11 +105,10 @@ export const articles = {
 	}
 };
 
-export function addArticle(newArticle: Omit<Article, 'id' | 'createdAt'>) {
-	articles.value = [
-		...articles.value,
-		{ ...newArticle, id: nextId++, createdAt: new Date().toISOString() }
-	];
+export function addArticle(newArticle: Omit<Article, 'id' | 'createdAt'>): Article {
+	const createdArticle = { ...newArticle, id: nextId++, createdAt: new Date().toISOString() };
+	articles.value = [createdArticle, ...articles.value];
+	return createdArticle;
 }
 
 export function updateArticle(updated: Article) {

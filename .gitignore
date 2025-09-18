@@ -1,21 +1,47 @@
-.DS_Store
-node_modules
-/build
-/.svelte-kit
-/package
+# Dependencies
+node_modules/
+.pnpm-debug.log*
+
+# Build outputs
+.output/
+.vercel/
+.netlify/
+.svelte-kit/
+build/
+dist/
+
+# Environment variables
 .env
-.env.*
-!.env.example
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
+.env.local
+.env.*.local
 
-# Coverage reports
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage
 coverage/
-*.lcov
+.nyc_output/
 
-# Test results
+# Playwright
 test-results/
 playwright-report/
+playwright/.cache/
+
+# Temporary files
+*.tmp
+*.temp
 
 # Lighthouse CI reports
 .lighthouseci/

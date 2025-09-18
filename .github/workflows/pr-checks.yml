@@ -1,0 +1,91 @@
+name: PR Quality Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Comprehensive quality gates for PRs
+  pr-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Code quality checks
+      - name: TypeScript check
+        run: npm run check
+
+      - name: Lint check
+        run: npm run lint
+
+      # Security checks
+      - name: Security audit
+        run: npm audit --audit-level=moderate
+
+      - name: Vulnerability scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium
+        continue-on-error: true
+
+      # Testing
+      - name: Unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Coverage threshold check
+        run: |
+          COVERAGE=$(npm run test:coverage -- --reporter=json | jq '.total.lines.pct')
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "Coverage $COVERAGE% is below 80% threshold"
+            exit 1
+          fi
+          echo "Coverage: $COVERAGE%"
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+
+      - name: E2E tests
+        run: npm run test:e2e
+
+      # Build verification
+      - name: Build check
+        run: npm run build
+
+      - name: Build size check
+        run: |
+          BUILD_SIZE=$(du -sh build | cut -f1)
+          echo "Build size: $BUILD_SIZE"
+          # Add size threshold check if needed
+
+  # PR comment with results
+  pr-comment:
+    runs-on: ubuntu-latest
+    needs: pr-quality
+    if: always()
+    steps:
+      - name: Comment PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ needs.pr-quality.result }}';
+            const body = status === 'success' 
+              ? '✅ All quality checks passed! Ready for review.'
+              : '❌ Quality checks failed. Please fix the issues before merging.';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

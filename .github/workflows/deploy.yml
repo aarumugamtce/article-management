@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: CI/CD Pipeline
 
 on:
   push:
@@ -16,7 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  test:
+  # Quality checks for PRs and main branch
+  quality-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,6 +33,9 @@ jobs:
 
       - name: Run unit tests with coverage
         run: npm run test:coverage
+        env:
+          USE_MOCK_API: true
+          NODE_ENV: development
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -45,9 +49,15 @@ jobs:
 
       - name: Run E2E tests
         run: npm run test:e2e
+        env:
+          USE_MOCK_API: true
+          NODE_ENV: development
 
       - name: Build for accessibility testing
         run: npm run build
+        env:
+          USE_MOCK_API: true
+          NODE_ENV: production
 
       - name: Start preview server for accessibility testing
         run: |
@@ -68,9 +78,10 @@ jobs:
         with:
           args: --severity-threshold=high
 
+  # Performance testing (runs on all events)
   lighthouse:
     runs-on: ubuntu-latest
-    needs: test
+    needs: quality-check
     steps:
       - uses: actions/checkout@v4
 
@@ -99,10 +110,11 @@ jobs:
           uploadArtifacts: false
           temporaryPublicStorage: false
 
+  # Deployment (only on main branch)
   deploy:
     runs-on: ubuntu-latest
-    needs: [test, lighthouse]
-    if: github.ref == 'refs/heads/main'
+    needs: [quality-check, lighthouse]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -122,9 +134,13 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          USE_MOCK_API: ${{ vars.USE_MOCK_API || 'true' }}
-          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://api.example.com' }}
+          USE_MOCK_API: ${{ vars.USE_MOCK_API || 'false' }}
+          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://api.airtable.com/v0' }}
+          AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+          AIRTABLE_TABLE_ID: ${{ secrets.AIRTABLE_TABLE_ID }}
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           ENABLE_ANALYTICS: ${{ vars.ENABLE_ANALYTICS || 'false' }}
+          LOG_LEVEL: ${{ vars.LOG_LEVEL || 'error' }}
 
       - name: Verify build output
         run: |

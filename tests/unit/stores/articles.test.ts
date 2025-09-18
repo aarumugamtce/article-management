@@ -41,7 +41,7 @@ describe('Articles Store', () => {
 		const updatedArticles = articles.get();
 		expect(updatedArticles).toHaveLength(initialCount + 1);
 
-		const newArticle = updatedArticles[updatedArticles.length - 1];
+		const newArticle = updatedArticles[0]; // New articles are now added to the beginning
 		expect(newArticle.title).toBe('New Article');
 		expect(newArticle.status).toBe('Draft');
 		expect(newArticle.author).toBe('Test Author');
