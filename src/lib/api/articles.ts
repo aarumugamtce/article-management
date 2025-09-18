@@ -20,9 +20,13 @@ export interface ArticleResponse {
 	limit: number;
 }
 
-// Check if we're specifically on GitHub Pages
+// Check if we're specifically on GitHub Pages (not in CI/testing)
 const isGitHubPages = () => {
-	return browser && window.location.hostname.endsWith('.github.io');
+	return (
+		browser &&
+		window.location.hostname.endsWith('.github.io') &&
+		!window.location.hostname.includes('localhost')
+	);
 };
 
 const errorMap = {
